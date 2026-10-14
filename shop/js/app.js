@@ -406,22 +406,25 @@ let featuredFeedbackTimer = null;
 
 // Single place that changes the Potion of the Week count: keeps the quantity box, buttons and summary in step
 function setFeaturedCount(count) {
-    orderState.featuredCount = Math.min(Math.max(count, 0), FEATURED_LIMIT);
-    document.getElementById('featured-quantity').value = orderState.featuredCount;
+    count = Math.min(Math.max(count, 0), FEATURED_LIMIT);
+    document.getElementById('featured-quantity').value = count;
+    // Safari fires the box's change event after an Add to Order click; keep its confirmation if nothing changed
+    if (count === orderState.featuredCount) return;
+
+    orderState.featuredCount = count;
     updateFeaturedControls();
     updateOrderSummary();
 }
 
 function updateFeaturedControls() {
-    const atLimit = orderState.featuredCount >= FEATURED_LIMIT;
     const btn = document.querySelector('.btn-featured');
 
     document.getElementById('featured-decrease').disabled = orderState.featuredCount <= 0;
-    document.getElementById('featured-increase').disabled = atLimit;
+    document.getElementById('featured-increase').disabled = orderState.featuredCount >= FEATURED_LIMIT;
 
     clearTimeout(featuredFeedbackTimer);
-    btn.disabled = atLimit;
-    btn.textContent = atLimit ? 'Limit reached (' + FEATURED_LIMIT + ')' : 'Add to Order';
+    btn.disabled = orderState.featuredCount === 0;
+    btn.textContent = 'Add to Order';
 }
 
 function handleFeaturedQuantityChange(event) {
@@ -436,14 +439,12 @@ function handleFeaturedQuantityChange(event) {
     setFeaturedCount(count);
 }
 
+// The quantity box sets the count; the button only confirms what is already in the order
 function addFeaturedToOrder() {
-    if (orderState.featuredCount >= FEATURED_LIMIT) return;
+    if (orderState.featuredCount === 0) return;
 
-    setFeaturedCount(orderState.featuredCount + 1);
-    if (orderState.featuredCount >= FEATURED_LIMIT) return;
-
-    // Show feedback
     const btn = document.querySelector('.btn-featured');
+    clearTimeout(featuredFeedbackTimer);
     btn.textContent = '✓ Added! (' + orderState.featuredCount + '/' + FEATURED_LIMIT + ')';
     featuredFeedbackTimer = setTimeout(() => {
         btn.textContent = 'Add to Order';

@@ -46,7 +46,7 @@ test.describe('Potion of the Week', () => {
     });
 
     test('adding it to an empty order charges the sale price', async ({ page }) => {
-        await page.getByRole('button', { name: 'Add to Order' }).click();
+        await page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' }).click();
 
         expect(await gold(page.locator('#summary-subtotal .item-price'))).toBe(SALE_PRICE);
         expect(await gold(page.locator('#summary-total .total-price'))).toBe(SALE_PRICE + BREWING_FEE + OWL_POST);
@@ -56,7 +56,7 @@ test.describe('Potion of the Week', () => {
         await page.locator('label').filter({ hasText: 'Healing Draught' }).click();
         const before = await gold(page.locator('#summary-subtotal .item-price'));
 
-        await page.getByRole('button', { name: 'Add to Order' }).click();
+        await page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' }).click();
 
         expect(await gold(page.locator('#summary-subtotal .item-price'))).toBe(before + SALE_PRICE);
     });
@@ -68,7 +68,7 @@ test.describe('Potion of the Week', () => {
         await page.locator('#quantity').fill('3');
         const before = await gold(page.locator('#summary-subtotal .item-price'));
 
-        await page.getByRole('button', { name: 'Add to Order' }).click();
+        await page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' }).click();
 
         expect(await gold(page.locator('#summary-subtotal .item-price'))).toBe(before + SALE_PRICE);
     });
@@ -78,7 +78,7 @@ test.describe('Potion of the Week', () => {
     });
 
     test('adding several shows them as one summary line with count and price', async ({ page }) => {
-        const button = page.locator('.btn-featured');
+        const button = page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' });
         const line = page.locator('#summary-featured');
 
         for (let count = 1; count <= 3; count++) {
@@ -93,20 +93,20 @@ test.describe('Potion of the Week', () => {
     });
 
     test(`at most ${FEATURED_LIMIT} can be added to an order`, async ({ page }) => {
-        const button = page.locator('.btn-featured');
+        const increase = page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' });
         const line = page.locator('#summary-featured');
 
         await expect(page.locator('.featured-limit')).toHaveText(`Limit ${FEATURED_LIMIT} per order`);
 
         for (let count = 1; count <= FEATURED_LIMIT; count++) {
-            await button.click();
+            await increase.click();
         }
 
-        await expect(button).toBeDisabled();
-        await expect(button).toHaveText(`Limit reached (${FEATURED_LIMIT})`);
+        await expect(increase).toBeDisabled();
 
-        // Even a forced click past the limit must not add another one
-        await button.click({ force: true });
+        // Neither a forced click past the limit nor Add to Order may add another one
+        await increase.click({ force: true });
+        await page.locator('.btn-featured').click();
         await page.evaluate(() => addFeaturedToOrder());
 
         await expect(line.locator('.item-name')).toHaveText(`Elixir of Eternal Focus × ${FEATURED_LIMIT}`);
@@ -155,7 +155,6 @@ test.describe('Potion of the Week', () => {
 
             await expect(page.locator('#featured-quantity')).toHaveValue(String(FEATURED_LIMIT));
             await expect(increase).toBeDisabled();
-            await expect(page.locator('.btn-featured')).toBeDisabled();
             expect(await gold(page.locator('#summary-featured .item-price'))).toBe(FEATURED_LIMIT * SALE_PRICE);
         });
 
@@ -178,6 +177,15 @@ test.describe('Potion of the Week', () => {
             expect(await gold(page.locator('#summary-featured .item-price'))).toBe(FEATURED_LIMIT * SALE_PRICE);
         });
 
+        test(`typing more than ${FEATURED_LIMIT} when already at ${FEATURED_LIMIT} stays capped`, async ({ page }) => {
+            const input = page.locator('#featured-quantity');
+
+            await input.fill(String(FEATURED_LIMIT));
+            await input.fill('9');
+
+            await expect(input).toHaveValue(String(FEATURED_LIMIT));
+        });
+
         test('rejects negative and non-whole numbers', async ({ page }) => {
             const input = page.locator('#featured-quantity');
 
@@ -191,27 +199,42 @@ test.describe('Potion of the Week', () => {
             // Decimal point is blocked too
             await input.click();
             await input.press('ControlOrMeta+a');
+            await input.press('Backspace');
             await input.pressSequentially('.e');
             await input.blur();
             await expect(input).toHaveValue('0');
             await expect(page.locator('#summary-featured')).toBeHidden();
         });
 
-        test('Add to Order increases the quantity box by one', async ({ page }) => {
-            await page.getByRole('button', { name: 'Add to Order' }).click();
-            await expect(page.locator('#featured-quantity')).toHaveValue('1');
+        test('Add to Order is disabled while the quantity box is 0', async ({ page }) => {
+            const button = page.getByRole('button', { name: 'Add to Order' });
+            await expect(button).toBeDisabled();
 
+            await page.locator('#featured-quantity').fill('2');
+            await expect(button).toBeEnabled();
+
+            await page.locator('#featured-quantity').fill('0');
+            await expect(button).toBeDisabled();
+        });
+
+        test('Add to Order keeps the number from the quantity box', async ({ page }) => {
+            await page.locator('#featured-quantity').fill('3');
+
+            await page.getByRole('button', { name: 'Add to Order' }).click();
             await page.locator('.btn-featured').click();
-            await expect(page.locator('#featured-quantity')).toHaveValue('2');
-            await expect(page.locator('#summary-featured .item-name')).toHaveText('Elixir of Eternal Focus × 2');
+
+            await expect(page.locator('#featured-quantity')).toHaveValue('3');
+            await expect(page.locator('#summary-featured .item-name')).toHaveText('Elixir of Eternal Focus × 3');
+            expect(await gold(page.locator('#summary-featured .item-price'))).toBe(3 * SALE_PRICE);
         });
     });
 
-    test('button confirms each add and stays available below the limit', async ({ page }) => {
+    test('button confirms the quantity and stays available', async ({ page }) => {
         const button = page.locator('.btn-featured');
+        await page.locator('#featured-quantity').fill('2');
 
         await button.click();
-        await expect(button).toHaveText(`✓ Added! (1/${FEATURED_LIMIT})`);
+        await expect(button).toHaveText(`✓ Added! (2/${FEATURED_LIMIT})`);
         await expect(button).toBeEnabled();
 
         await expect(button).toHaveText('Add to Order', { timeout: 5000 });

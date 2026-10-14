@@ -253,6 +253,21 @@ h1, h2, h3, h4 {
     border-radius: 50%;
 }
 
+.featured-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.qty-btn:disabled,
+.qty-btn:disabled:hover {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--color-surface-light);
+    border-color: var(--color-border);
+}
+
 .featured-limit {
     margin-top: 0.5rem;
     font-size: 0.8rem;
@@ -823,6 +838,14 @@ h1, h2, h3, h4 {
 .btn-clear:hover {
     color: var(--color-text);
     border-color: var(--color-accent);
+}
+
+.btn-clear:disabled,
+.btn-clear:disabled:hover {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
 }
 
 .btn-clear:focus-visible {

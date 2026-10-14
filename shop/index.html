@@ -15,7 +15,7 @@
             document.documentElement.dataset.theme = theme;
         })();
     </script>
-    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,7 +49,14 @@
                         <span class="original-price">40 gold</span>
                         <span class="sale-price">34 gold</span>
                     </div>
-                    <button class="btn btn-featured" onclick="addFeaturedToOrder()">Add to Order</button>
+                    <div class="featured-actions">
+                        <div class="quantity-selector featured-quantity">
+                            <button type="button" class="qty-btn" id="featured-decrease" aria-label="Remove one Elixir of Eternal Focus">−</button>
+                            <input type="number" id="featured-quantity" value="0" min="0" max="7" aria-label="Elixir of Eternal Focus quantity">
+                            <button type="button" class="qty-btn" id="featured-increase" aria-label="Add one Elixir of Eternal Focus">+</button>
+                        </div>
+                        <button class="btn btn-featured" onclick="addFeaturedToOrder()">Add to Order</button>
+                    </div>
                     <p class="featured-limit">Limit 7 per order</p>
                 </div>
             </div>
@@ -246,7 +253,7 @@
                         <span class="total-label">Total</span>
                         <span class="total-price">8 gold</span>
                     </div>
-                    <button type="button" class="btn btn-clear" id="clear-order">Clear Order</button>
+                    <button type="button" class="btn btn-clear" id="clear-order" disabled>Clear Order</button>
                 </div>
             </aside>
         </div>
@@ -401,6 +408,6 @@
         </div>
     </footer>
 
-    <script src="js/app.js?v=2"></script>
+    <script src="js/app.js?v=3"></script>
 </body>
 </html>

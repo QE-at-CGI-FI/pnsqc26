@@ -7,6 +7,9 @@
 const BREWING_FEE = 3;
 const FEATURED_PRICE = 34;
 const FEATURED_LIMIT = 7;
+const ORDER_CHOICES =
+    'input[name="base-potion"], input[name="size"], input[name="potency"], ' +
+    'input[name="ingredient"], input[name="delivery"]';
 const MIN_QUANTITY = 1;
 const MAX_QUANTITY = 99;
 const SIZE_MULTIPLIERS = {
@@ -147,6 +150,11 @@ function syncStateFromDom() {
     const quantity = parseInt(document.getElementById('quantity').value);
     orderState.quantity = isNaN(quantity) ? MIN_QUANTITY : Math.min(Math.max(quantity, MIN_QUANTITY), MAX_QUANTITY);
 
+    const featuredCount = parseInt(document.getElementById('featured-quantity').value);
+    orderState.featuredCount = isNaN(featuredCount) ? 0 : Math.min(Math.max(featuredCount, 0), FEATURED_LIMIT);
+    document.getElementById('featured-quantity').value = orderState.featuredCount;
+    updateFeaturedControls();
+
     handleIngredientChange();
 }
 
@@ -179,17 +187,20 @@ function initEventListeners() {
     const quantityInput = document.getElementById('quantity');
     quantityInput.addEventListener('change', handleQuantityChange);
     quantityInput.addEventListener('input', handleQuantityChange);
-    // Whole positive numbers only: block minus, plus, decimal point and exponent
-    quantityInput.addEventListener('keydown', function(event) {
-        if (['-', '+', '.', ',', 'e', 'E'].includes(event.key)) {
-            event.preventDefault();
-        }
+    quantityInput.addEventListener('keydown', blockNonDigitKeys);
+    quantityInput.addEventListener('paste', blockNonDigitPaste);
+
+    // Potion of the Week quantity
+    const featuredInput = document.getElementById('featured-quantity');
+    featuredInput.addEventListener('change', handleFeaturedQuantityChange);
+    featuredInput.addEventListener('input', handleFeaturedQuantityChange);
+    featuredInput.addEventListener('keydown', blockNonDigitKeys);
+    featuredInput.addEventListener('paste', blockNonDigitPaste);
+    document.getElementById('featured-decrease').addEventListener('click', () => {
+        setFeaturedCount(orderState.featuredCount - 1);
     });
-    quantityInput.addEventListener('paste', function(event) {
-        const text = (event.clipboardData || window.clipboardData).getData('text');
-        if (!/^\d+$/.test(text.trim())) {
-            event.preventDefault();
-        }
+    document.getElementById('featured-increase').addEventListener('click', () => {
+        setFeaturedCount(orderState.featuredCount + 1);
     });
 
     // Delivery method
@@ -268,6 +279,20 @@ function handlePotencyChange(event) {
     orderState.potency = radio.value;
     orderState.potencyMultiplier = parseFloat(radio.dataset.multiplier);
     updateOrderSummary();
+}
+
+// Whole positive numbers only: block minus, plus, decimal point and exponent
+function blockNonDigitKeys(event) {
+    if (['-', '+', '.', ',', 'e', 'E'].includes(event.key)) {
+        event.preventDefault();
+    }
+}
+
+function blockNonDigitPaste(event) {
+    const text = (event.clipboardData || window.clipboardData).getData('text');
+    if (!/^\d+$/.test(text.trim())) {
+        event.preventDefault();
+    }
 }
 
 function handleQuantityChange(event) {
@@ -364,26 +389,61 @@ function updateOrderSummary() {
     // Update total display
     const summaryTotal = document.getElementById('summary-total');
     summaryTotal.querySelector('.total-price').textContent = total.toFixed(2) + ' gold';
+
+    document.getElementById('clear-order').disabled = !hasOrderChanges();
+}
+
+// True when any price-affecting choice differs from the page defaults, i.e. there is something to clear
+function hasOrderChanges() {
+    const choices = document.querySelectorAll(ORDER_CHOICES);
+    const quantityInput = document.getElementById('quantity');
+    return orderState.featuredCount > 0 ||
+        quantityInput.value !== quantityInput.defaultValue ||
+        Array.from(choices).some(input => input.checked !== input.defaultChecked);
 }
 
 let featuredFeedbackTimer = null;
 
+// Single place that changes the Potion of the Week count: keeps the quantity box, buttons and summary in step
+function setFeaturedCount(count) {
+    orderState.featuredCount = Math.min(Math.max(count, 0), FEATURED_LIMIT);
+    document.getElementById('featured-quantity').value = orderState.featuredCount;
+    updateFeaturedControls();
+    updateOrderSummary();
+}
+
+function updateFeaturedControls() {
+    const atLimit = orderState.featuredCount >= FEATURED_LIMIT;
+    const btn = document.querySelector('.btn-featured');
+
+    document.getElementById('featured-decrease').disabled = orderState.featuredCount <= 0;
+    document.getElementById('featured-increase').disabled = atLimit;
+
+    clearTimeout(featuredFeedbackTimer);
+    btn.disabled = atLimit;
+    btn.textContent = atLimit ? 'Limit reached (' + FEATURED_LIMIT + ')' : 'Add to Order';
+}
+
+function handleFeaturedQuantityChange(event) {
+    const input = event.target;
+    const count = parseInt(input.value);
+
+    if (isNaN(count)) {
+        // Let the field stay empty while typing; settle on 0 once editing is done
+        if (event.type === 'change') setFeaturedCount(0);
+        return;
+    }
+    setFeaturedCount(count);
+}
+
 function addFeaturedToOrder() {
     if (orderState.featuredCount >= FEATURED_LIMIT) return;
 
-    orderState.featuredCount++;
-    updateOrderSummary();
+    setFeaturedCount(orderState.featuredCount + 1);
+    if (orderState.featuredCount >= FEATURED_LIMIT) return;
 
     // Show feedback
     const btn = document.querySelector('.btn-featured');
-    clearTimeout(featuredFeedbackTimer);
-
-    if (orderState.featuredCount >= FEATURED_LIMIT) {
-        btn.textContent = 'Limit reached (' + FEATURED_LIMIT + ')';
-        btn.disabled = true;
-        return;
-    }
-
     btn.textContent = '✓ Added! (' + orderState.featuredCount + '/' + FEATURED_LIMIT + ')';
     featuredFeedbackTimer = setTimeout(() => {
         btn.textContent = 'Add to Order';
@@ -414,10 +474,7 @@ function handleFormSubmit(event) {
 
 // Reset every price-affecting choice to the page defaults; delivery address fields are kept
 function clearOrder() {
-    const choices = document.querySelectorAll(
-        'input[name="base-potion"], input[name="size"], input[name="potency"], ' +
-        'input[name="ingredient"], input[name="delivery"]'
-    );
+    const choices = document.querySelectorAll(ORDER_CHOICES);
     choices.forEach(input => {
         input.checked = input.defaultChecked;
     });
@@ -425,11 +482,7 @@ function clearOrder() {
     const quantityInput = document.getElementById('quantity');
     quantityInput.value = quantityInput.defaultValue;
 
-    orderState.featuredCount = 0;
-    clearTimeout(featuredFeedbackTimer);
-    const featuredBtn = document.querySelector('.btn-featured');
-    featuredBtn.textContent = 'Add to Order';
-    featuredBtn.disabled = false;
+    document.getElementById('featured-quantity').value = 0;
 
     syncStateFromDom();
 }

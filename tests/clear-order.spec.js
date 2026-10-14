@@ -14,6 +14,32 @@ test.describe('Clear order', () => {
         await page.goto('/');
     });
 
+    test('is disabled until the order is changed', async ({ page }) => {
+        const clearButton = page.getByRole('button', { name: 'Clear Order' });
+        await expect(clearButton).toBeDisabled();
+
+        await page.locator('label').filter({ hasText: 'Healing Draught' }).click();
+
+        await expect(clearButton).toBeEnabled();
+    });
+
+    test('is enabled by adding the Potion of the Week', async ({ page }) => {
+        await page.locator('.btn-featured').click();
+
+        await expect(page.getByRole('button', { name: 'Clear Order' })).toBeEnabled();
+    });
+
+    test('leaves no potion selected and becomes disabled again', async ({ page }) => {
+        const clearButton = page.getByRole('button', { name: 'Clear Order' });
+        await page.locator('label').filter({ hasText: 'Healing Draught' }).click();
+
+        await clearButton.click();
+
+        await expect(page.locator('input[name="base-potion"]:checked')).toHaveCount(0);
+        await expect(page.locator('#summary-potion .item-name')).toHaveText('No potion selected');
+        await expect(clearButton).toBeDisabled();
+    });
+
     test('resets every choice and the summary to the page defaults', async ({ page }) => {
         const summary = page.locator('.order-summary');
         const defaultSummary = await summary.innerText();

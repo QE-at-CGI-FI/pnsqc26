@@ -9,6 +9,7 @@ const FEATURED_TEXT = [
     '.featured-name',
     '.featured-description',
     '.featured-price',
+    '.featured-quantity',
     '.btn-featured',
     '.featured-limit'
 ];

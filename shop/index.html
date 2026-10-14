@@ -50,6 +50,7 @@
                         <span class="sale-price">34 gold</span>
                     </div>
                     <button class="btn btn-featured" onclick="addFeaturedToOrder()">Add to Order</button>
+                    <p class="featured-limit">Limit 7 per order</p>
                 </div>
             </div>
         </section>
@@ -223,6 +224,10 @@
                         <span class="item-name">Quantity: 1</span>
                         <span class="item-price">-</span>
                     </div>
+                    <div class="summary-item" id="summary-featured" hidden>
+                        <span class="item-name">Elixir of Eternal Focus × 0</span>
+                        <span class="item-price">0 gold</span>
+                    </div>
                     <div class="summary-divider"></div>
                     <div class="summary-item" id="summary-subtotal">
                         <span class="item-name">Subtotal</span>
@@ -241,6 +246,7 @@
                         <span class="total-label">Total</span>
                         <span class="total-price">8 gold</span>
                     </div>
+                    <button type="button" class="btn btn-clear" id="clear-order">Clear Order</button>
                 </div>
             </aside>
         </div>
@@ -248,31 +254,36 @@
         <!-- Customer Information -->
         <section class="customer-info">
             <h2 class="section-title">📋 Delivery Details</h2>
-            <form id="order-form" class="order-form">
+            <form id="order-form" class="order-form" novalidate>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="customer-name">Full Name *</label>
-                        <input type="text" id="customer-name" placeholder="e.g., Gandalf the Grey" required>
+                        <input type="text" id="customer-name" placeholder="e.g., Gandalf the Grey" required maxlength="60" autocomplete="name" aria-describedby="customer-name-error">
+                        <span class="field-error" id="customer-name-error" aria-live="polite"></span>
                     </div>
                     <div class="form-group">
-                        <div class="label-placeholder"></div>
-                        <input type="text" id="contact-crystal" placeholder="Contact Crystal (email)">
+                        <label for="contact-crystal">Contact Crystal (email)</label>
+                        <input type="email" id="contact-crystal" placeholder="e.g., gandalf@middle.earth" maxlength="100" autocomplete="email" aria-describedby="contact-crystal-error">
+                        <span class="field-error" id="contact-crystal-error" aria-live="polite"></span>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="castle-name">Castle/Tower Name *</label>
-                        <input type="text" id="castle-name" placeholder="e.g., Hogwarts Castle" required>
+                        <input type="text" id="castle-name" placeholder="e.g., Hogwarts Castle" required maxlength="80" aria-describedby="castle-name-error">
+                        <span class="field-error" id="castle-name-error" aria-live="polite"></span>
                     </div>
                     <div class="form-group">
                         <label for="tower-number">Tower/Room Number</label>
-                        <input type="text" id="tower-number" placeholder="e.g., Tower 7, Room 42">
+                        <input type="text" id="tower-number" placeholder="e.g., Tower 7, Room 42" maxlength="40" aria-describedby="tower-number-error">
+                        <span class="field-error" id="tower-number-error" aria-live="polite"></span>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group full-width">
                         <label for="kingdom">Kingdom/Realm *</label>
-                        <input type="text" id="kingdom" placeholder="e.g., The Northern Reaches" required>
+                        <input type="text" id="kingdom" placeholder="e.g., The Northern Reaches" required maxlength="80" aria-describedby="kingdom-error">
+                        <span class="field-error" id="kingdom-error" aria-live="polite"></span>
                     </div>
                 </div>
                 <div class="form-row">
@@ -301,7 +312,8 @@
                 <div class="form-row">
                     <div class="form-group full-width">
                         <label for="special-instructions">Special Instructions</label>
-                        <textarea id="special-instructions" rows="3" placeholder="Any special requests for your order..."></textarea>
+                        <textarea id="special-instructions" rows="3" placeholder="Any special requests for your order..." maxlength="500" aria-describedby="special-instructions-error"></textarea>
+                        <span class="field-error" id="special-instructions-error" aria-live="polite"></span>
                     </div>
                 </div>
                 <div class="form-actions">

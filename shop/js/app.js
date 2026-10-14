@@ -6,6 +6,7 @@
 // Constants
 const BREWING_FEE = 3;
 const FEATURED_PRICE = 34;
+const FEATURED_LIMIT = 7;
 const MIN_QUANTITY = 1;
 const MAX_QUANTITY = 99;
 const SIZE_MULTIPLIERS = {
@@ -38,6 +39,47 @@ const POTENCY_NAMES = {
     maximum: 'Maximum (+75%)'
 };
 
+// Delivery detail rules: each returns an error message, or '' when the value is valid
+const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}' .-]*$/u;
+const PLACE_PATTERN = /^[\p{L}\p{M}\d][\p{L}\p{M}\d' .,&()-]*$/u;
+const ROOM_PATTERN = /^[\p{L}\p{M}\d][\p{L}\p{M}\d .,#\/-]*$/u;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const DELIVERY_FIELD_RULES = {
+    'customer-name': function(value) {
+        if (!value) return 'Please enter your full name.';
+        if (value.length < 2) return 'Name must be at least 2 characters.';
+        if (!NAME_PATTERN.test(value)) return 'Name can only contain letters, spaces, apostrophes, hyphens and periods.';
+        return '';
+    },
+    'contact-crystal': function(value) {
+        if (!value) return '';
+        if (!EMAIL_PATTERN.test(value)) return 'Please enter a valid email, e.g. gandalf@middle.earth.';
+        return '';
+    },
+    'castle-name': function(value) {
+        if (!value) return 'Please enter your castle or tower name.';
+        if (value.length < 2) return 'Castle/Tower name must be at least 2 characters.';
+        if (!PLACE_PATTERN.test(value)) return 'Castle/Tower name contains characters we cannot deliver to.';
+        return '';
+    },
+    'tower-number': function(value) {
+        if (!value) return '';
+        if (!ROOM_PATTERN.test(value)) return 'Tower/Room can only contain letters, numbers, spaces and , . # / -';
+        return '';
+    },
+    'kingdom': function(value) {
+        if (!value) return 'Please enter your kingdom or realm.';
+        if (value.length < 2) return 'Kingdom/Realm must be at least 2 characters.';
+        if (!PLACE_PATTERN.test(value)) return 'Kingdom/Realm contains characters we cannot deliver to.';
+        return '';
+    },
+    'special-instructions': function(value) {
+        if (value.length > 500) return 'Special instructions can be at most 500 characters.';
+        return '';
+    }
+};
+
 // State
 let orderState = {
     basePotion: null,
@@ -51,7 +93,7 @@ let orderState = {
     quantity: 1,
     deliveryMethod: 'owl',
     deliveryPrice: 5,
-    featuredAdded: false
+    featuredCount: 0
 };
 
 // Initialize
@@ -159,6 +201,39 @@ function initEventListeners() {
     // Form submission
     const orderForm = document.getElementById('order-form');
     orderForm.addEventListener('submit', handleFormSubmit);
+
+    // Clear order
+    document.getElementById('clear-order').addEventListener('click', clearOrder);
+
+    // Delivery details: check a field when leaving it, and re-check while fixing an error
+    Object.keys(DELIVERY_FIELD_RULES).forEach(id => {
+        const field = document.getElementById(id);
+        field.addEventListener('blur', () => validateDeliveryField(field));
+        field.addEventListener('input', () => {
+            if (field.getAttribute('aria-invalid') === 'true') validateDeliveryField(field);
+        });
+    });
+}
+
+function validateDeliveryField(field) {
+    const message = DELIVERY_FIELD_RULES[field.id](field.value.trim());
+    document.getElementById(field.id + '-error').textContent = message;
+    if (message) {
+        field.setAttribute('aria-invalid', 'true');
+    } else {
+        field.removeAttribute('aria-invalid');
+    }
+    return !message;
+}
+
+function validateDeliveryDetails() {
+    let firstInvalid = null;
+    Object.keys(DELIVERY_FIELD_RULES).forEach(id => {
+        const field = document.getElementById(id);
+        if (!validateDeliveryField(field) && !firstInvalid) firstInvalid = field;
+    });
+    if (firstInvalid) firstInvalid.focus();
+    return !firstInvalid;
 }
 
 function handlePotionChange(event) {
@@ -204,8 +279,9 @@ function handleQuantityChange(event) {
         quantity = MIN_QUANTITY;
         if (event.type === 'change') input.value = quantity;
     } else {
+        const typing = event.type === 'input' && quantity < MIN_QUANTITY;
         quantity = Math.min(Math.max(quantity, MIN_QUANTITY), MAX_QUANTITY);
-        if (String(quantity) !== input.value) input.value = quantity;
+        if (!typing && String(quantity) !== input.value) input.value = quantity;
     }
 
     orderState.quantity = quantity;
@@ -263,11 +339,12 @@ function updateOrderSummary() {
         potionSubtotal = orderState.basePotionPrice * orderState.sizeMultiplier * orderState.potencyMultiplier;
     }
 
-    // Add featured potion if added
-    let featuredTotal = 0;
-    if (orderState.featuredAdded) {
-        featuredTotal = FEATURED_PRICE;
-    }
+    // Featured potion (Potion of the Week) line
+    const featuredTotal = FEATURED_PRICE * orderState.featuredCount;
+    const summaryFeatured = document.getElementById('summary-featured');
+    summaryFeatured.hidden = orderState.featuredCount === 0;
+    summaryFeatured.querySelector('.item-name').textContent = 'Elixir of Eternal Focus × ' + orderState.featuredCount;
+    summaryFeatured.querySelector('.item-price').textContent = featuredTotal + ' gold';
 
     // Calculate subtotal
     let subtotal = (potionSubtotal * orderState.quantity) + orderState.ingredientsTotal + featuredTotal;
@@ -289,23 +366,34 @@ function updateOrderSummary() {
     summaryTotal.querySelector('.total-price').textContent = total.toFixed(2) + ' gold';
 }
 
+let featuredFeedbackTimer = null;
+
 function addFeaturedToOrder() {
-    orderState.featuredAdded = true;
+    if (orderState.featuredCount >= FEATURED_LIMIT) return;
+
+    orderState.featuredCount++;
     updateOrderSummary();
 
     // Show feedback
     const btn = document.querySelector('.btn-featured');
-    btn.textContent = '✓ Added!';
-    btn.disabled = true;
+    clearTimeout(featuredFeedbackTimer);
 
-    setTimeout(() => {
+    if (orderState.featuredCount >= FEATURED_LIMIT) {
+        btn.textContent = 'Limit reached (' + FEATURED_LIMIT + ')';
+        btn.disabled = true;
+        return;
+    }
+
+    btn.textContent = '✓ Added! (' + orderState.featuredCount + '/' + FEATURED_LIMIT + ')';
+    featuredFeedbackTimer = setTimeout(() => {
         btn.textContent = 'Add to Order';
-        btn.disabled = false;
-    }, 2000);
+    }, 1500);
 }
 
 function handleFormSubmit(event) {
     event.preventDefault();
+
+    if (!validateDeliveryDetails()) return;
 
     // Generate order number
     const orderNumber = 'EB-' + Math.floor(Math.random() * 90000 + 10000);
@@ -321,6 +409,28 @@ function handleFormSubmit(event) {
 
     // Reset form
     document.getElementById('order-form').reset();
+    syncStateFromDom();
+}
+
+// Reset every price-affecting choice to the page defaults; delivery address fields are kept
+function clearOrder() {
+    const choices = document.querySelectorAll(
+        'input[name="base-potion"], input[name="size"], input[name="potency"], ' +
+        'input[name="ingredient"], input[name="delivery"]'
+    );
+    choices.forEach(input => {
+        input.checked = input.defaultChecked;
+    });
+
+    const quantityInput = document.getElementById('quantity');
+    quantityInput.value = quantityInput.defaultValue;
+
+    orderState.featuredCount = 0;
+    clearTimeout(featuredFeedbackTimer);
+    const featuredBtn = document.querySelector('.btn-featured');
+    featuredBtn.textContent = 'Add to Order';
+    featuredBtn.disabled = false;
+
     syncStateFromDom();
 }
 

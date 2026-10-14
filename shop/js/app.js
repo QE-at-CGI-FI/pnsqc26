@@ -5,6 +5,9 @@
 
 // Constants
 const BREWING_FEE = 3;
+const FEATURED_PRICE = 34;
+const MIN_QUANTITY = 1;
+const MAX_QUANTITY = 99;
 const SIZE_MULTIPLIERS = {
     vial: 1,
     flask: 1.5,
@@ -99,7 +102,8 @@ function syncStateFromDom() {
     orderState.deliveryMethod = delivery.value;
     orderState.deliveryPrice = parseInt(delivery.dataset.price);
 
-    orderState.quantity = parseInt(document.getElementById('quantity').value) || 1;
+    const quantity = parseInt(document.getElementById('quantity').value);
+    orderState.quantity = isNaN(quantity) ? MIN_QUANTITY : Math.min(Math.max(quantity, MIN_QUANTITY), MAX_QUANTITY);
 
     handleIngredientChange();
 }
@@ -133,6 +137,18 @@ function initEventListeners() {
     const quantityInput = document.getElementById('quantity');
     quantityInput.addEventListener('change', handleQuantityChange);
     quantityInput.addEventListener('input', handleQuantityChange);
+    // Whole positive numbers only: block minus, plus, decimal point and exponent
+    quantityInput.addEventListener('keydown', function(event) {
+        if (['-', '+', '.', ',', 'e', 'E'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+    quantityInput.addEventListener('paste', function(event) {
+        const text = (event.clipboardData || window.clipboardData).getData('text');
+        if (!/^\d+$/.test(text.trim())) {
+            event.preventDefault();
+        }
+    });
 
     // Delivery method
     const deliveryRadios = document.querySelectorAll('input[name="delivery"]');
@@ -180,8 +196,19 @@ function handlePotencyChange(event) {
 }
 
 function handleQuantityChange(event) {
-    const value = event.target.value;
-    orderState.quantity = parseInt(value) || 1;
+    const input = event.target;
+    let quantity = parseInt(input.value);
+
+    if (isNaN(quantity)) {
+        // Let the field stay empty while typing; restore it once editing is done
+        quantity = MIN_QUANTITY;
+        if (event.type === 'change') input.value = quantity;
+    } else {
+        quantity = Math.min(Math.max(quantity, MIN_QUANTITY), MAX_QUANTITY);
+        if (String(quantity) !== input.value) input.value = quantity;
+    }
+
+    orderState.quantity = quantity;
     updateOrderSummary();
 }
 
@@ -195,8 +222,9 @@ function handleDeliveryChange(event) {
 function changeQuantity(delta) {
     const input = document.getElementById('quantity');
     let newValue = parseInt(input.value) + delta;
-    if (newValue < 1) newValue = 1;
-    if (newValue > 99) newValue = 99;
+    if (isNaN(newValue)) newValue = MIN_QUANTITY;
+    if (newValue < MIN_QUANTITY) newValue = MIN_QUANTITY;
+    if (newValue > MAX_QUANTITY) newValue = MAX_QUANTITY;
     input.value = newValue;
     orderState.quantity = newValue;
     updateOrderSummary();
@@ -238,7 +266,7 @@ function updateOrderSummary() {
     // Add featured potion if added
     let featuredTotal = 0;
     if (orderState.featuredAdded) {
-        featuredTotal = 36;
+        featuredTotal = FEATURED_PRICE;
     }
 
     // Calculate subtotal

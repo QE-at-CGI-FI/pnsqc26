@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Enchanted Brew Shop | Handcrafted Potions Since 1247</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <h1 class="shop-name">The Enchanted Brew Shop</h1>
+                <p class="tagline">Handcrafted potions since 1247</p>
+            </div>
+            <div class="header-info">
+                <span class="delivery-info">🦉 Owl Post: 3-5 days</span>
+                <span class="hours">Open dawn to dusk</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Featured Potion Section -->
+        <section class="featured-section">
+            <div class="featured-potion">
+                <div class="discount-badge">15% OFF</div>
+                <img src="images/featured-potion.png" class="featured-image">
+                <div class="featured-content">
+                    <span class="featured-label">✨ Potion of the Week</span>
+                    <h2 class="featured-name">Elixir of Eternal Focus</h2>
+                    <p class="featured-description">Perfect for wizards preparing for exams or lengthy enchantments. Enhances concentration for up to 12 hours.</p>
+                    <div class="featured-price">
+                        <span class="original-price">40 gold</span>
+                        <span class="sale-price">34 gold</span>
+                    </div>
+                    <button class="btn btn-featured" onclick="addFeaturedToOrder()">Add to Order</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="builder-layout">
+            <!-- Potion Builder Section -->
+            <section class="potion-builder">
+                <h2 class="section-title">🧪 Craft Your Potion</h2>
+
+                <!-- Base Potion Selection -->
+                <div class="builder-section">
+                    <h3>Choose Your Base Potion</h3>
+                    <div class="potion-options">
+                        <label class="potion-card">
+                            <input type="radio" name="base-potion" value="healing" data-price="25">
+                            <div class="card-content">
+                                <span class="potion-icon">❤️</span>
+                                <span class="potion-name">Healing Draught</span>
+                                <span class="potion-price">25 gold</span>
+                            </div>
+                        </label>
+                        <label class="potion-card">
+                            <input type="radio" name="base-potion" value="strength" data-price="30">
+                            <div class="card-content">
+                                <span class="potion-icon">💪</span>
+                                <span class="potion-name">Elixir of Strength</span>
+                                <span class="potion-price">30 gold</span>
+                            </div>
+                        </label>
+                        <label class="potion-card">
+                            <input type="radio" name="base-potion" value="wisdom" data-price="35">
+                            <div class="card-content">
+                                <span class="potion-icon">🧠</span>
+                                <span class="potion-name">Potion of Wisdom</span>
+                                <span class="potion-price">35 gold</span>
+                            </div>
+                        </label>
+                        <label class="potion-card">
+                            <input type="radio" name="base-potion" value="invisibility" data-price="45">
+                            <div class="card-content">
+                                <span class="potion-icon">👻</span>
+                                <span class="potion-name">Invisibility Brew</span>
+                                <span class="potion-price">45 gold</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Size Selection -->
+                <div class="builder-section">
+                    <h3>Select Size</h3>
+                    <div class="size-options">
+                        <label class="size-option">
+                            <input type="radio" name="size" value="vial" data-multiplier="1" checked>
+                            <div class="size-content">
+                                <span class="size-icon">🧴</span>
+                                <span class="size-name">Vial</span>
+                                <span class="size-detail">50ml · 1x price</span>
+                            </div>
+                        </label>
+                        <label class="size-option">
+                            <input type="radio" name="size" value="flask" data-multiplier="1.5">
+                            <div class="size-content">
+                                <span class="size-icon">⚗️</span>
+                                <span class="size-name">Flask</span>
+                                <span class="size-detail">150ml · 1.5x price</span>
+                            </div>
+                        </label>
+                        <label class="size-option">
+                            <input type="radio" name="size" value="bottle" data-multiplier="2.5">
+                            <div class="size-content">
+                                <span class="size-icon">🍾</span>
+                                <span class="size-name">Bottle</span>
+                                <span class="size-detail">500ml · 2x price</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Special Ingredients -->
+                <div class="builder-section">
+                    <h3>Add Special Ingredients</h3>
+                    <div class="ingredients-grid">
+                        <label class="ingredient-option">
+                            <input type="checkbox" name="ingredient" value="dragon-scale" data-price="15">
+                            <span class="ingredient-name">🐉 Dragon Scale</span>
+                            <span class="ingredient-price">+15 gold</span>
+                        </label>
+                        <label class="ingredient-option">
+                            <input type="checkbox" name="ingredient" value="moonstone" data-price="8">
+                            <span class="ingredient-name">🌙 Moonstone Dust</span>
+                            <span class="ingredient-price">+8 gold</span>
+                        </label>
+                        <label class="ingredient-option">
+                            <input type="checkbox" name="ingredient" value="phoenix-feather" data-price="18">
+                            <span class="ingredient-name">🔥 Phoenix Feather</span>
+                            <span class="ingredient-price">+20 gold</span>
+                        </label>
+                        <label class="ingredient-option">
+                            <input type="checkbox" name="ingredient" value="enchanted-honey" data-price="5">
+                            <span class="ingredient-name">🍯 Enchanted Honey</span>
+                            <span class="ingredient-price">+5 gold</span>
+                        </label>
+                        <label class="ingredient-option">
+                            <input type="checkbox" name="ingredient" value="shadow-essence" data-price="12">
+                            <span class="ingredient-name">🌑 Shadow Essence</span>
+                            <span class="ingredient-price">+12 gold</span>
+                        </label>
+                        <label class="ingredient-option">
+                            <input type="checkbox" name="ingredient" value="starlight-dew" data-price="10">
+                            <span class="ingredient-name">⭐ Starlight Dew</span>
+                            <span class="ingredient-price">+12 gold</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Potency Selection -->
+                <div class="builder-section">
+                    <h3>Choose Potency</h3>
+                    <div class="potency-options">
+                        <label class="potency-option">
+                            <input type="radio" name="potency" value="standard" data-multiplier="1" checked>
+                            <span class="potency-name">Standard</span>
+                            <span class="potency-detail">Regular strength</span>
+                        </label>
+                        <label class="potency-option">
+                             <input type="radio" name="potency" value="enhanced" data-multiplier="1.25">
+                            <span class="potency-name">Enhanced</span>
+                            <span class="potency-detail">+25% strength, +25% price</span>
+                        </label>
+                        <label class="potency-option">
+                            <input type="radio" name="potency" value="maximum" data-multiplier="1.75">
+                            <span class="potency-name">Maximum</span>
+                            <span class="potency-detail">+75% strength, +75% price</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Quantity -->
+                <div class="builder-section">
+                    <h3>Quantity</h3>
+                    <div class="quantity-selector">
+                        <button class="qty-btn" onclick="changeQuantity(-1)">−</button>
+                        <input type="number" id="quantity" value="1" min="1" max="99" tabindex="-1">
+                        <button class="qty-btn" onclick="changeQuantity(1)">+</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Order Summary -->
+            <aside class="order-summary">
+                <h2 class="summary-title">📜 Order Summary</h2>
+                <div class="summary-content">
+                    <div class="summary-item" id="summary-potion">
+                        <span class="item-name">No potion selected</span>
+                        <span class="item-price">-</span>
+                    </div>
+                    <div class="summary-item" id="summary-size">
+                        <span class="item-name">Size: Vial (1x)</span>
+                        <span class="item-price">-</span>
+                    </div>
+                    <div class="summary-item" id="summary-potency">
+                        <span class="item-name">Potency: Standard</span>
+                        <span class="item-price">-</span>
+                    </div>
+                    <div class="summary-item" id="summary-ingredients">
+                        <span class="item-name">Ingredients</span>
+                        <span class="item-price">0 gold</span>
+                    </div>
+                    <div class="summary-item" id="summary-quantity">
+                        <span class="item-name">Quantity: 1</span>
+                        <span class="item-price">-</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-item" id="summary-subtotal">
+                        <span class="item-name">Subtotal</span>
+                        <span class="item-price">0 gold</span>
+                    </div>
+                    <div class="summary-item brewing-fee">
+                        <span class="item-name">Brewing Fee</span>
+                        <span class="item-price">3 gold</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-total" id="summary-total">
+                        <span class="total-label">Total</span>
+                        <span class="total-price">3 gold</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Customer Information -->
+        <section class="customer-info">
+            <h2 class="section-title">📋 Delivery Details</h2>
+            <form id="order-form" class="order-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-name">Full Name *</label>
+                        <input type="text" id="customer-name" placeholder="e.g., Gandalf the Grey" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="label-placeholder"></div>
+                        <input type="text" id="contact-crystal" placeholder="Contact Crystal (email)">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="castle-name">Castle/Tower Name *</label>
+                        <input type="text" id="castle-name" placeholder="e.g., Hogwarts Castle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tower-number">Tower/Room Number</label>
+                        <input type="text" id="tower-number" placeholder="e.g., Tower 7, Room 42">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="kingdom">Kingdom/Realm *</label>
+                        <input type="text" id="kingdom" placeholder="e.g., The Northern Reaches" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Delivery Method *</label>
+                        <div class="delivery-options">
+                            <label class="delivery-option">
+                                <input type="radio" name="delivery" value="owl" data-price="5" checked>
+                                <span class="delivery-content">
+                                    <span class="delivery-icon">🦉</span>
+                                    <span class="delivery-name">Owl Post</span>
+                                    <span class="delivery-detail">3-5 days · 5 gold</span>
+                                </span>
+                            </label>
+                            <label class="delivery-option">
+                                <input type="radio" name="delivery" value="dragon" data-price="15">
+                                <span class="delivery-content">
+                                    <span class="delivery-icon">🐲</span>
+                                    <span class="delivery-name">Dragon Express</span>
+                                    <span class="delivery-detail">Next day · 15 gold</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="special-instructions">Special Instructions</label>
+                        <textarea id="special-instructions" rows="3" placeholder="Any special requests for your order..."></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-brew" aria-label="Submit">
+                        🔮 Brew My Order
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmation-modal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <div class="modal-icon">✨</div>
+                <h2>Order Confirmed!</h2>
+                <p>Your potion is now being brewed by our master alchemists.</p>
+                <p class="order-number">Order #<span id="order-number"></span></p>
+                <p class="delivery-estimate">Estimated delivery: <span id="delivery-estimate"></span></p>
+                <button class="btn btn-primary" onclick="closeModal()">Continue Shopping</button>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <section class="reviews-section">
+            <h2 class="section-title">⭐ Customer Reviews</h2>
+            <div class="reviews-grid">
+                <div class="review-card">
+                    <div class="review-stars">★★★★★</div>
+                    <p class="review-text">"The Healing Draught saved my life during the Battle of Thornwood. Fast delivery too!"</p>
+                    <span class="review-author">— Sir Aldric of Westmoor</span>
+                </div>
+                <div class="review-card">
+                    <div class="review-stars light-stars">★★★★★</div>
+                    <p class="review-text">"The Invisibility Brew worked great, except my shoes were still visible. Minor issue, but cost me the element of surprise. 4/5 would recommend."</p>
+                    <span class="review-author">— Shadow Walker Lyra</span>
+                </div>
+                <div class="review-card">
+                    <div class="review-stars">★★★★★</div>
+                    <p class="review-text">"Been ordering from The Enchanted Brew Shop for 200 years. Consistent quality every time."</p>
+                    <span class="review-author">— Vampire Lord Cornelius</span>
+                </div>
+                <div class="review-card">
+                    <div class="review-stars">★★★★☆</div>
+                    <p class="review-text">"Potion of Wisdom made me realize I should have ordered two. Paradoxically frustrating."</p>
+                    <span class="review-author">— Apprentice Wizard Finn</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h5>Shop Hours</h5>
+                <p>Open dusk to dawn</p>
+                <p>Closed on full moons</p>
+                <p>& during dragon migrations</p>
+            </div>
+            <div class="footer-section">
+                <h4>Visit Us</h4>
+                <p>42 Cauldron Lane</p>
+                <p>Mystic Quarter</p>
+                <p>Avalon, Enchanted Realm</p>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p>🦉 Send an owl</p>
+                <p>🔮 Crystal: brew@enchanted.shop</p>
+                <p>📯 Emergency horn available</p>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#" class="social-link">SpellBook</a>
+                    <a href="https://wandergram.fake/enchanted-brew" class="social-link" target="_blank">Wandergram</a>
+                    <a href="#" class="social-link">Potion-terest</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 1247-2024 The Enchanted Brew Shop. All rights reserved.</p>
+            <p class="guarantee">✨ Satisfaction guaranteed or your gold back ✨</p>
+            <p class="attribution">Site created by Christine Pinto, edited for purposes of illustrating task expansion to tester role AI brings about.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

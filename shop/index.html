@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Enchanted Brew Shop | Handcrafted Potions Since 1247</title>
+    <script>
+        // Apply saved or system theme before first paint to avoid a flash
+        (function() {
+            var theme;
+            try { theme = localStorage.getItem('theme'); } catch (e) {}
+            if (theme !== 'light' && theme !== 'dark') {
+                theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            }
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +30,7 @@
             <div class="header-info">
                 <span class="delivery-info">🦉 Owl Post: 3-5 days</span>
                 <span class="hours">Open dawn to dusk</span>
+                <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to light mode">☀️ Light</button>
             </div>
         </div>
     </header>

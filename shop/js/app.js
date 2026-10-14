@@ -54,8 +54,30 @@ let orderState = {
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     initEventListeners();
+    initThemeToggle();
     syncStateFromDom();
 });
+
+function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    updateThemeToggle(toggle);
+    toggle.addEventListener('click', function() {
+        const theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            // Storage unavailable; theme still applies for this page view
+        }
+        updateThemeToggle(toggle);
+    });
+}
+
+function updateThemeToggle(toggle) {
+    const isLight = document.documentElement.dataset.theme === 'light';
+    toggle.textContent = isLight ? '🌙 Dark' : '☀️ Light';
+    toggle.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+}
 
 // Browsers may restore checked inputs on reload/back navigation without firing change events
 window.addEventListener('pageshow', syncStateFromDom);

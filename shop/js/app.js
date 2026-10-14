@@ -7,8 +7,8 @@
 const BREWING_FEE = 3;
 const SIZE_MULTIPLIERS = {
     vial: 1,
-    flask: 1.35,
-    bottle: 2.5
+    flask: 1.5,
+    bottle: 2
 };
 
 const POTION_NAMES = {
@@ -21,7 +21,12 @@ const POTION_NAMES = {
 const SIZE_NAMES = {
     vial: 'Vial (1x)',
     flask: 'Flask (1.5x)',
-    bottle: 'Bottle (2.5x)'
+    bottle: 'Bottle (2x)'
+};
+
+const DELIVERY_NAMES = {
+    owl: 'Owl Post',
+    dragon: 'Dragon Express'
 };
 
 const POTENCY_NAMES = {
@@ -49,8 +54,33 @@ let orderState = {
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     initEventListeners();
-    updateOrderSummary();
+    syncStateFromDom();
 });
+
+// Browsers may restore checked inputs on reload/back navigation without firing change events
+window.addEventListener('pageshow', syncStateFromDom);
+
+function syncStateFromDom() {
+    const potion = document.querySelector('input[name="base-potion"]:checked');
+    orderState.basePotion = potion ? potion.value : null;
+    orderState.basePotionPrice = potion ? parseInt(potion.dataset.price) : 0;
+
+    const size = document.querySelector('input[name="size"]:checked');
+    orderState.size = size.value;
+    orderState.sizeMultiplier = SIZE_MULTIPLIERS[size.value];
+
+    const potency = document.querySelector('input[name="potency"]:checked');
+    orderState.potency = potency.value;
+    orderState.potencyMultiplier = parseFloat(potency.dataset.multiplier);
+
+    const delivery = document.querySelector('input[name="delivery"]:checked');
+    orderState.deliveryMethod = delivery.value;
+    orderState.deliveryPrice = parseInt(delivery.dataset.price);
+
+    orderState.quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+    handleIngredientChange();
+}
 
 function initEventListeners() {
     // Base potion selection
@@ -196,8 +226,13 @@ function updateOrderSummary() {
     const summarySubtotal = document.getElementById('summary-subtotal');
     summarySubtotal.querySelector('.item-price').textContent = subtotal.toFixed(2) + ' gold';
 
-    // Calculate total with brewing fee (note: delivery not included)
-    let total = subtotal + BREWING_FEE;
+    // Update delivery display
+    const summaryDelivery = document.getElementById('summary-delivery');
+    summaryDelivery.querySelector('.item-name').textContent = 'Delivery: ' + DELIVERY_NAMES[orderState.deliveryMethod];
+    summaryDelivery.querySelector('.item-price').textContent = orderState.deliveryPrice + ' gold';
+
+    // Calculate total with brewing fee and delivery
+    let total = subtotal + BREWING_FEE + orderState.deliveryPrice;
 
     // Update total display
     const summaryTotal = document.getElementById('summary-total');
@@ -236,6 +271,7 @@ function handleFormSubmit(event) {
 
     // Reset form
     document.getElementById('order-form').reset();
+    syncStateFromDom();
 }
 
 function closeModal() {

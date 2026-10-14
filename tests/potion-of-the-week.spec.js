@@ -223,6 +223,9 @@ test.describe('Potion of the Week', () => {
     });
 
     test('button confirms each add and stays available below the limit', async ({ page }) => {
+        // The confirmation shows for 1.5 s; control the clock so a busy machine can't miss it
+        await page.clock.install();
+        await page.reload();
         const button = page.locator('.btn-featured');
         await page.locator('#featured-quantity').fill('2');
 
@@ -230,6 +233,7 @@ test.describe('Potion of the Week', () => {
         await expect(button).toHaveText(`✓ Added! (2/${FEATURED_LIMIT})`);
         await expect(button).toBeEnabled();
 
-        await expect(button).toHaveText('Add to Order', { timeout: 5000 });
+        await page.clock.runFor(1500);
+        await expect(button).toHaveText('Add to Order');
     });
 });

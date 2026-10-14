@@ -2,9 +2,11 @@
   "name": "pnsqc26",
   "private": true,
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:bombadil": "bombadil browser test --headless --time-limit=2m --output-path=bombadil-output --output-path-overwrite http://localhost:8080/ bombadil/specification.ts"
   },
   "devDependencies": {
+    "@antithesishq/bombadil": "^0.7.8",
     "@playwright/test": "^1.64.1"
   }
 }

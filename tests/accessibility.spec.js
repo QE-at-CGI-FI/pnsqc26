@@ -37,4 +37,47 @@ test.describe('Accessibility', () => {
             }
         });
     }
+
+    test.describe('base potion', () => {
+        test.beforeEach(async ({ page }) => {
+            await page.goto('/');
+        });
+
+        test('each potion is a radio button named after it', async ({ page }) => {
+            for (const name of BASE_POTIONS) {
+                await expect(page.getByRole('radio', { name })).toHaveCount(1);
+            }
+        });
+
+        test('can be chosen with the keyboard', async ({ page }) => {
+            const healing = page.getByRole('radio', { name: 'Healing Draught' });
+            await healing.focus();
+
+            await page.keyboard.press('Space');
+            await expect(healing).toBeChecked();
+            await expect(page.locator('#summary-potion .item-name')).toHaveText('Healing Draught');
+
+            await page.keyboard.press('ArrowRight');
+            await expect(page.getByRole('radio', { name: 'Elixir of Strength' })).toBeChecked();
+            await expect(page.locator('#summary-potion .item-name')).toHaveText('Elixir of Strength');
+        });
+
+        test('the focused potion card is visibly marked', async ({ page }) => {
+            // Keep the pointer away so hover styling doesn't count as focus styling
+            await page.mouse.move(0, 0);
+            const look = card => card.evaluate(el => {
+                const style = getComputedStyle(el);
+                return [style.outlineStyle, style.outlineColor, style.borderColor, style.boxShadow].join(' | ');
+            });
+            const healingCard = page.locator('.potion-card').filter({ hasText: 'Healing Draught' }).locator('.card-content');
+            const unfocused = await look(healingCard);
+
+            // Focus without selecting, as Tab does
+            await page.getByRole('radio', { name: 'Healing Draught' }).focus();
+
+            expect(await look(healingCard), 'card looks the same with and without focus').not.toBe(unfocused);
+        });
+    });
 });
+
+const BASE_POTIONS = ['Healing Draught', 'Elixir of Strength', 'Potion of Wisdom', 'Invisibility Brew'];

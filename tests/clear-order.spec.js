@@ -24,7 +24,7 @@ test.describe('Clear order', () => {
     });
 
     test('is enabled by adding the Potion of the Week', async ({ page }) => {
-        await page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' }).click();
+        await page.getByRole('button', { name: 'Add to Order' }).click();
 
         await expect(page.getByRole('button', { name: 'Clear Order' })).toBeEnabled();
     });
@@ -53,6 +53,7 @@ test.describe('Clear order', () => {
         await page.locator('#quantity').fill('5');
         await page.locator('label').filter({ hasText: 'Dragon Express' }).click();
         await page.locator('#featured-quantity').fill('2');
+        await page.getByRole('button', { name: 'Add to Order' }).click();
         await expect(summary).not.toHaveText(defaultSummary);
 
         await page.getByRole('button', { name: 'Clear Order' }).click();
@@ -70,17 +71,17 @@ test.describe('Clear order', () => {
     });
 
     test('lets the Potion of the Week be added again after reaching the limit', async ({ page }) => {
-        const increase = page.getByRole('button', { name: 'Add one Elixir of Eternal Focus' });
-        for (let i = 0; i < 7; i++) {
-            await increase.click();
-        }
-        await expect(increase).toBeDisabled();
+        const featuredButton = page.locator('.btn-featured');
+        await page.locator('#featured-quantity').fill('7');
+        await featuredButton.click();
+        await expect(featuredButton).toBeDisabled();
 
         await page.getByRole('button', { name: 'Clear Order' }).click();
 
-        await expect(page.locator('#featured-quantity')).toHaveValue('0');
-        await expect(increase).toBeEnabled();
-        await increase.click();
+        await expect(page.locator('#featured-quantity')).toHaveValue('1');
+        await expect(featuredButton).toBeEnabled();
+        await expect(featuredButton).toHaveText('Add to Order');
+        await featuredButton.click();
         await expect(page.locator('#summary-featured .item-name')).toHaveText('Elixir of Eternal Focus × 1');
     });
 

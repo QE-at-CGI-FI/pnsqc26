@@ -150,10 +150,7 @@ function syncStateFromDom() {
     const quantity = parseInt(document.getElementById('quantity').value);
     orderState.quantity = isNaN(quantity) ? MIN_QUANTITY : Math.min(Math.max(quantity, MIN_QUANTITY), MAX_QUANTITY);
 
-    const featuredCount = parseInt(document.getElementById('featured-quantity').value);
-    orderState.featuredCount = isNaN(featuredCount) ? 0 : Math.min(Math.max(featuredCount, 0), FEATURED_LIMIT);
-    document.getElementById('featured-quantity').value = orderState.featuredCount;
-    updateFeaturedControls();
+    setFeaturedSelection(featuredSelection());
 
     handleIngredientChange();
 }
@@ -197,10 +194,10 @@ function initEventListeners() {
     featuredInput.addEventListener('keydown', blockNonDigitKeys);
     featuredInput.addEventListener('paste', blockNonDigitPaste);
     document.getElementById('featured-decrease').addEventListener('click', () => {
-        setFeaturedCount(orderState.featuredCount - 1);
+        setFeaturedSelection(featuredSelection() - 1);
     });
     document.getElementById('featured-increase').addEventListener('click', () => {
-        setFeaturedCount(orderState.featuredCount + 1);
+        setFeaturedSelection(featuredSelection() + 1);
     });
 
     // Delivery method
@@ -404,49 +401,75 @@ function hasOrderChanges() {
 
 let featuredFeedbackTimer = null;
 
-// Single place that changes the Potion of the Week count: keeps the quantity box, buttons and summary in step
-function setFeaturedCount(count) {
-    count = Math.min(Math.max(count, 0), FEATURED_LIMIT);
-    document.getElementById('featured-quantity').value = count;
-    // Safari fires the box's change event after an Add to Order click; keep its confirmation if nothing changed
-    if (count === orderState.featuredCount) return;
+// How many more Potions of the Week fit in the order
+function featuredRemaining() {
+    return FEATURED_LIMIT - orderState.featuredCount;
+}
 
-    orderState.featuredCount = count;
+function featuredSelection() {
+    return parseInt(document.getElementById('featured-quantity').value) || 0;
+}
+
+// The quantity box only picks how many to add (1 up to what still fits); the order changes on Add to Order
+function setFeaturedSelection(count) {
+    const remaining = featuredRemaining();
+    const input = document.getElementById('featured-quantity');
+    input.min = Math.min(1, remaining);
+    input.max = remaining;
+    input.value = Math.min(Math.max(count, 1), remaining);
     updateFeaturedControls();
-    updateOrderSummary();
 }
 
 function updateFeaturedControls() {
+    const selection = featuredSelection();
+    const remaining = featuredRemaining();
     const btn = document.querySelector('.btn-featured');
 
-    document.getElementById('featured-decrease').disabled = orderState.featuredCount <= 0;
-    document.getElementById('featured-increase').disabled = orderState.featuredCount >= FEATURED_LIMIT;
+    document.getElementById('featured-decrease').disabled = selection <= 1;
+    document.getElementById('featured-increase').disabled = selection >= remaining;
+    btn.disabled = remaining === 0;
 
-    clearTimeout(featuredFeedbackTimer);
-    btn.disabled = orderState.featuredCount === 0;
-    btn.textContent = 'Add to Order';
+    // Safari fires the box's change event mid-click on Add to Order: leave a showing confirmation alone, and
+    // never rewrite identical text, as replacing the text node under the pointer makes Safari drop the click
+    let text = btn.textContent;
+    if (remaining === 0) {
+        clearTimeout(featuredFeedbackTimer);
+        featuredFeedbackTimer = null;
+        text = 'Limit reached (' + FEATURED_LIMIT + ')';
+    } else if (!featuredFeedbackTimer) {
+        text = 'Add to Order';
+    }
+    if (btn.textContent !== text) btn.textContent = text;
 }
 
 function handleFeaturedQuantityChange(event) {
-    const input = event.target;
-    const count = parseInt(input.value);
+    const count = parseInt(event.target.value);
 
     if (isNaN(count)) {
-        // Let the field stay empty while typing; settle on 0 once editing is done
-        if (event.type === 'change') setFeaturedCount(0);
+        // Let the field stay empty while typing; settle on 1 once editing is done
+        if (event.type === 'change') setFeaturedSelection(1);
         return;
     }
-    setFeaturedCount(count);
+    setFeaturedSelection(count);
 }
 
-// The quantity box sets the count; the button only confirms what is already in the order
+// Adds the number in the quantity box to the order, up to the per-order limit
 function addFeaturedToOrder() {
-    if (orderState.featuredCount === 0) return;
+    const count = Math.min(featuredSelection(), featuredRemaining());
+    if (count <= 0) return;
 
-    const btn = document.querySelector('.btn-featured');
+    orderState.featuredCount += count;
     clearTimeout(featuredFeedbackTimer);
+    featuredFeedbackTimer = null;
+    setFeaturedSelection(featuredSelection());
+    updateOrderSummary();
+    if (featuredRemaining() === 0) return;
+
+    // Show feedback
+    const btn = document.querySelector('.btn-featured');
     btn.textContent = '✓ Added! (' + orderState.featuredCount + '/' + FEATURED_LIMIT + ')';
     featuredFeedbackTimer = setTimeout(() => {
+        featuredFeedbackTimer = null;
         btn.textContent = 'Add to Order';
     }, 1500);
 }
@@ -483,7 +506,11 @@ function clearOrder() {
     const quantityInput = document.getElementById('quantity');
     quantityInput.value = quantityInput.defaultValue;
 
-    document.getElementById('featured-quantity').value = 0;
+    orderState.featuredCount = 0;
+    clearTimeout(featuredFeedbackTimer);
+    featuredFeedbackTimer = null;
+    const featuredInput = document.getElementById('featured-quantity');
+    featuredInput.value = featuredInput.defaultValue;
 
     syncStateFromDom();
 }
